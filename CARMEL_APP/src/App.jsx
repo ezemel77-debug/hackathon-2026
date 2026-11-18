@@ -19,6 +19,10 @@ import AdminProductos from "./pages/admin/AdminProductos";
 import AdminPedidos from "./pages/admin/AdminPedidos";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 
+//******************* PUNTO 1 */
+import RegistroPendiente from "./pages/RegistroPendiente";
+import ConfirmarRegistro from "./pages/ConfirmarRegistro";
+
 //******************* PUNTO 2 */
 import OlvidePassword from "./pages/OlvidePassword";
 import RestablecerPassword from "./pages/RestablecerPassword";
@@ -35,9 +39,12 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Register />} />
 
+          <Route path="/registro-pendiente" element={<RegistroPendiente />} />
+          <Route path="/confirmar-registro/:token" element={<ConfirmarRegistro />}/>
+
           {/* PUNTO 2 */}
           <Route path="/olvide-password" element={<OlvidePassword />} />
-          <Route path="/restablecer/:token" element={<RestablecerPassword />} />  
+          <Route path="/restablecer/:token" element={<RestablecerPassword />} />
 
           <Route
             path="/carrito"

@@ -20,6 +20,14 @@ const Usuario = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    verificacion_token: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    verificacion_expira: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

@@ -44,6 +44,9 @@ export const api = {
   login: (payload) => http.post("/auth/login", payload),
   me: () => http.get("/auth/me"),
 
+  confirmarRegistro: (token) =>
+  http.post("/auth/confirmar-registro", { token }),
+
   //********************** PUNTO 2 */
   olvidePassword: (email) =>
   http.post("/auth/olvide-password", { email }),

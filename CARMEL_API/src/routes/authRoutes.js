@@ -11,4 +11,6 @@ router.get("/me", auth, controller.me);
 router.post("/olvide-password", controller.olvidePassword);
 router.post("/restablecer-password", controller.restablecerPassword);
 
+router.post("/confirmar-registro", controller.confirmarRegistro);
+
 export default router;

@@ -42,11 +42,16 @@ export function AuthProvider({ children }) {
     return data.usuario;
   }
 
+  // async function registrar(payload) {
+  //   const data = await api.register(payload);
+  //   setToken(data.token);
+  //   setUsuario(data.usuario);
+  //   return data.usuario;
+  // }
+
   async function registrar(payload) {
     const data = await api.register(payload);
-    setToken(data.token);
-    setUsuario(data.usuario);
-    return data.usuario;
+    return data;
   }
 
   function logout() {

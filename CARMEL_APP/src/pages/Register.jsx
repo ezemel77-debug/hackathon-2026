@@ -34,7 +34,11 @@ export default function Register() {
     setEnviando(true);
     try {
       await registrar(form);
-      navigate("/", { replace: true });
+      // navigate("/", { replace: true });
+      navigate("/registro-pendiente", {
+        replace: true,
+        state: { email: form.email },
+      });
     } catch (err) {
       setError(err.message);
     } finally {

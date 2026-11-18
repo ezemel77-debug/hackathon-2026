@@ -1,4 +1,5 @@
 import crypto from "crypto";
+
 import {
   sequelize,
   Carrito,
@@ -8,6 +9,9 @@ import {
   ItemOrden,
   Usuario,
 } from "../models/index.js";
+
+import enviaMailPedido from "../utils/enviaMailPedido.js";
+import enviaMailEstado from "../utils/enviaMailEstado.js";
 
 function codigoOrden() {
   return `T-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
@@ -60,12 +64,10 @@ async function crear(req, res, next) {
     for (const item of items) {
       if (!item.producto.activo || item.cantidad > item.producto.stock) {
         await t.rollback();
-        return res
-          .status(400)
-          .json({
-            ok: false,
-            message: `Stock insuficiente para ${item.producto.nombre}`,
-          });
+        return res.status(400).json({
+          ok: false,
+          message: `Stock insuficiente para ${item.producto.nombre}`,
+        });
       }
       total += item.cantidad * Number(item.precio_unitario);
     }
@@ -106,6 +108,19 @@ async function crear(req, res, next) {
     });
     await t.commit();
 
+    //------------3. Generar un pedido
+    try {
+      const usuario = await Usuario.findByPk(req.usuario.id);
+
+      if (usuario) {
+        await enviaMailPedido(usuario, orden, items);
+        console.log("Notificaciones de pedido procesadas");
+      }
+    } catch (error) {
+      console.error("Error notificando pedido:", error.message);
+    }
+    //--------------------------------------
+
     res.status(201).json({
       ok: true,
       message: "Compra confirmada",
@@ -119,7 +134,11 @@ async function crear(req, res, next) {
       },
     });
   } catch (e) {
-    await t.rollback();
+    // await t.rollback();
+    // next(e);
+    if (!t.finished) {
+      await t.rollback();
+    }
     next(e);
   }
 }
@@ -205,20 +224,66 @@ async function listarAdmin(req, res, next) {
   }
 }
 
+// async function actualizarEstado(req, res, next) {
+//   try {
+//     const estados = ["pendiente", "confirmado", "entregado"];
+//     if (!estados.includes(req.body.estado))
+//       return res.status(400).json({ ok: false, message: "Estado inválido" });
+//     const orden = await Orden.findByPk(req.params.id);
+//     if (!orden)
+//       return res
+//         .status(404)
+//         .json({ ok: false, message: "Orden no encontrada" });
+//     await orden.update({ estado: req.body.estado });
+//     res.json({ ok: true, orden });
+//   } catch (e) {
+//     next(e);
+//   }
+// }
+
 async function actualizarEstado(req, res, next) {
   try {
     const estados = ["pendiente", "confirmado", "entregado"];
-    if (!estados.includes(req.body.estado))
-      return res.status(400).json({ ok: false, message: "Estado inválido" });
+
+    if (!estados.includes(req.body.estado)) {
+      return res.status(400).json({
+        ok: false,
+        message: "Estado inválido",
+      });
+    }
+
     const orden = await Orden.findByPk(req.params.id);
-    if (!orden)
-      return res
-        .status(404)
-        .json({ ok: false, message: "Orden no encontrada" });
+
+    if (!orden) {
+      return res.status(404).json({
+        ok: false,
+        message: "Orden no encontrada",
+      });
+    }
+
+    const estadoAnterior = orden.estado;
+
     await orden.update({ estado: req.body.estado });
-    res.json({ ok: true, orden });
-  } catch (e) {
-    next(e);
+
+    if (estadoAnterior !== orden.estado) {
+      try {
+        const usuario = await Usuario.findByPk(orden.usuario_id);
+
+        if (usuario) {
+          await enviaMailEstado(usuario, orden);
+          console.log("Correo de cambio de estado enviado");
+        }
+      } catch (error) {
+        console.error("Error enviando cambio de estado:", error.message);
+      }
+    }
+
+    res.json({
+      ok: true,
+      orden,
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
